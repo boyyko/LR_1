@@ -1,9 +1,11 @@
-cmake_minimum_required(VERSION 3.4)
+cmake_minimum_required(VERSION 3.12)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-option(BUILD_COVERAGE "Build coverage" OFF)
+option(BUILD_TESTS "Build tests" ON)
+option(BUILD_DOCS "Build documentation" OFF)
+option(BUILD_COVERAGE "Build code coverage" OFF)
 
 set(
         HUNTER_CACHE_SERVERS
@@ -19,7 +21,7 @@ HunterGate(
 )
 
 # TODO: rename project and delete this comment
-project(lab-01-parser)
+project(template VERSION 0.1.0)
 string(APPEND CMAKE_CXX_FLAGS " -pedantic -Werror -Wall -Wextra")
 string(APPEND CMAKE_CXX_FLAGS " -Wno-unused-command-line-argument")
 string(APPEND CMAKE_CXX_FLAGS " -Wshadow -Wnon-virtual-dtor")
@@ -29,34 +31,39 @@ find_package(GTest CONFIG REQUIRED)
 hunter_add_package(nlohmann_json)
 find_package(nlohmann_json CONFIG REQUIRED)
 
-# TODO: change template word to project name and delete this comment
 add_library(lab-01-parser STATIC
         # enum your files and delete this comment
-        sources/student.cpp include/student.hpp sources/json.cpp include/json.hpp)
-add_executable(tests
-        # TODO: enum your files and delete this comment
-        ${CMAKE_CURRENT_SOURCE_DIR}/tests/test.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/sources/json.cpp
+        include/student.hpp sources/student.cpp
+        include/json.hpp
         )
 
-# TODO: change template word to project name and delete this comment
-target_include_directories(lab-01-parser
-        PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
+add_executable(demo
+        ${CMAKE_CURRENT_SOURCE_DIR}/demo/main.cpp
         )
-target_include_directories(tests
-        PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
+
+target_include_directories(lab-01-parser PUBLIC
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+        "$<INSTALL_INTERFACE:include>"
         )
-# TODO: change template word to project name and delete this comment
-target_link_libraries(tests GTest::gtest_main lab-01-parser)
+
+target_link_libraries(demo lab-01-parser)
 target_link_libraries(lab-01-parser nlohmann_json::nlohmann_json)
 
-enable_testing()
-add_test(NAME unit_tests COMMAND tests)
+if(BUILD_TESTS)
+  add_executable(tests
+          # TODO: enum your files and delete this comment
+          ${CMAKE_CURRENT_SOURCE_DIR}/tests/test.cpp
+          )
+  target_link_libraries(tests lab-01-parser GTest::gtest_main)
+  enable_testing()
+  add_test(NAME unit_tests COMMAND tests)
+endif()
 
 if(BUILD_COVERAGE)
   set(ENABLE_COVERAGE ON CACHE BOOL "Enable coverage build." FORCE)
   list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/tools/coverage/cmake")
   find_package(codecov)
-  # TODO: change template word to project name and delete this comment
   add_coverage(lab-01-parser)
   add_coverage(tests)
   coverage_evaluate()
